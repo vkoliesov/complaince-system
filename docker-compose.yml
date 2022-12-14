@@ -1,0 +1,41 @@
+version: "3.8"
+
+volumes:
+  local_postgres_data: {}
+  local_postgres_data_backups: {}
+
+networks:
+  complaint_main:
+    driver: bridge
+
+services:
+  backend:
+    networks:
+      - complaint_main
+    restart: always
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: complaint_backend
+    depends_on:
+      - postgres
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    command: ["/bin/sh", "/app/scripts/run-local.sh"]
+  
+  postgres:
+    networks:
+      - complaint_main
+    restart: always
+    image: postgres:15.1
+    volumes:
+      - local_postgres_data:/var/lib/postgresql/data
+      - local_postgres_data_backups:/backups
+    env_file:
+      - .env
+    ports:
+      - "0.0.0.0:5432:5432"
