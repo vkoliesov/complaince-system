@@ -16,6 +16,8 @@ ipython = "^8.7.0"
 databases = "^0.6.2"
 alembic = "^1.8.1"
 python-decouple = "^3.6"
+passlib = "^1.7.4"
+pyjwt = "^2.6.0"
 
 
 [build-system]
