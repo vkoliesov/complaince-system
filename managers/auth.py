@@ -8,7 +8,9 @@ from fastapi.security import HTTPBearer, HTTPBasicCredentials
 from starlette.exceptions import HTTPException
 
 from db import database
-from models import User
+from models import User, RoleType
+
+users = User.metadata.tables.get("users")
 
 class AuthManager:
     @staticmethod
@@ -41,7 +43,9 @@ class CustomHTTPBearer(HTTPBearer):
                 key=config("SECRET_KEY"),
                 algorithms=[config("ALGORITHM")]
             )
-            user_data = await database.fetch_one(User.select().where(User.c.id == payload["sub"]))
+            user_data = await database.fetch_one(
+                users.select().where(users.c.id == int(payload["sub"]))
+            )
             request.state.user = user_data
             return payload
         except jwt.ExpiredSignatureError:
@@ -50,3 +54,18 @@ class CustomHTTPBearer(HTTPBearer):
             raise HTTPException(401, "Invalid token")
 
 oauth2_scheme = CustomHTTPBearer()
+
+
+def is_complainer(request: Request):
+    if not request.state.user["role"] == RoleType.complainer:
+        raise HTTPException(403, "Forbidden")
+
+
+def is_approver(request: Request):
+    if not request.state.user["role"] == RoleType.approver:
+        raise HTTPException(403, "Forbidden")
+
+
+def is_admin(request: Request):
+    if not request.state.user["role"] == RoleType.admin:
+        raise HTTPException(403, "Forbidden")
