@@ -5,7 +5,7 @@ from asyncpg import UniqueViolationError
 
 from db import database
 from managers.auth import AuthManager
-from models import User
+from models import User, RoleType
 
 
 pwd_context = CryptContext(
@@ -35,3 +35,15 @@ class UserManager:
             raise HTTPException(400, "Wrong email or password")
 
         return AuthManager().encode_token(user_do)
+
+    @staticmethod
+    async def get_all_users():
+        return await database.fetch_all(users.select())
+
+    @staticmethod
+    async def get_user_by_email(email):
+        return await database.fetch_one(users.select().where(users.c.email == email))
+
+    @staticmethod
+    async def change_role(role: RoleType, user_id: int):
+        return await database.execute(users.update().where(users.c.id == user_id).values(role=role))

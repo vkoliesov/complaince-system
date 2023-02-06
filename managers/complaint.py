@@ -19,3 +19,7 @@ class ComplaintManager:
         complaint_data["complainer_id"] = user["id"]
         id_ = await database.execute(complaints.insert().values(**complaint_data))
         return await database.fetch_one(complaints.select().where(complaints.c.id == id_))
+
+    @staticmethod
+    async def delete_complaint(complaint_id: int):
+        await database.execute(complaints.delete().where(complaints.c.id == complaint_id))
