@@ -8,12 +8,10 @@ from managers.auth import AuthManager
 from models import User, RoleType
 
 
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto"
-)
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 users = User.metadata.tables.get("users")
+
 
 class UserManager:
     @staticmethod
@@ -28,7 +26,9 @@ class UserManager:
 
     @staticmethod
     async def login(user_data):
-        user_do = await database.fetch_one(users.select().where(users.c.email == user_data["email"]))
+        user_do = await database.fetch_one(
+            users.select().where(users.c.email == user_data["email"])
+        )
         if not user_do:
             raise HTTPException(400, "Wrong email or password")
         elif not pwd_context.verify(user_data["password"], user_do["password"]):
@@ -46,4 +46,6 @@ class UserManager:
 
     @staticmethod
     async def change_role(role: RoleType, user_id: int):
-        return await database.execute(users.update().where(users.c.id == user_id).values(role=role))
+        return await database.execute(
+            users.update().where(users.c.id == user_id).values(role=role)
+        )

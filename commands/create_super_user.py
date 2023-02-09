@@ -12,14 +12,7 @@ from models.users import RoleType
 @click.option("-p", "--phone", type=str, required=True)
 @click.option("-i", "--iban", type=str, required=True)
 @click.option("-pa", "--password", type=str, required=True)
-async def create_user(
-    first_name,
-    last_name,
-    email,
-    phone,
-    iban,
-    password
-):
+async def create_user(first_name, last_name, email, phone, iban, password):
     user_data = {
         "first_name": first_name,
         "last_name": last_name,
@@ -27,7 +20,7 @@ async def create_user(
         "phone": phone,
         "iban": iban,
         "password": password,
-        "role": RoleType.admin
+        "role": RoleType.admin,
     }
     await database.connect()
     await UserManager().register(user_data)
