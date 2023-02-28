@@ -5,11 +5,13 @@ from constants import TEMP_FILE_FOLDER
 from models import Complaint, RoleType, State
 from db import database
 from services.s3 import S3Service
+from services.ses import SESService
 from utils.helpers import decode_photo
 
 
 complaints = Complaint.metadata.tables.get("complaints")
 s3 = S3Service()
+ses = SESService()
 
 
 class ComplaintManager:
@@ -50,6 +52,11 @@ class ComplaintManager:
             complaints.update()
             .where(complaints.c.id == complaint_id)
             .values(status=State.approved)
+        )
+        ses.send_mail(
+            "Complaint approved!",
+            ["destination"],
+            "Congrats! Your claim is approved, check your bank account in 2 days for your refund"
         )
 
     @staticmethod
