@@ -90,8 +90,8 @@ class WiseService:
         print(resp)
         raise HTTPException(500, "Payment provider is not available at the moment.")
 
-    def fund_transfer(self, tranfer_id):
-        url = self.main_url + f"/v3/profiles/{self.profile_id}/transfers/{tranfer_id}/payments"
+    def fund_transfer(self, transfer_id):
+        url = self.main_url + f"/v3/profiles/{self.profile_id}/transfers/{transfer_id}/payments"
         data = {
             "type": "BALANCE"
         }
@@ -104,5 +104,19 @@ class WiseService:
         if resp.status_code == 201:
             resp = resp.json()
             return resp
+        print(resp)
+        raise HTTPException(500, "Payment provider is not available at the moment.")
+
+    def cancel_fund(self, transfer_id):
+        url = self.main_url + f"/v1/transfers/{transfer_id}/cancel"
+
+        resp = requests.put(
+            url,
+            headers=self.headers,
+        )
+
+        if resp.status_code == 200:
+            resp = resp.json()
+            return resp["id"]
         print(resp)
         raise HTTPException(500, "Payment provider is not available at the moment.")

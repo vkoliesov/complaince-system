@@ -59,11 +59,14 @@ class ComplaintManager:
         await database.execute(
             complaints.update()
             .where(complaints.c.id == complaint_id)
-            .values(status=State.approved)
+            .values(state=State.approved)
         )
+        transaction_data = await database.fetch_one(transactions.select().where(transactions.c.complaint_id == complaint_id))
+        wise = WiseService()
+        wise.fund_transfer(transfer_id=transaction_data["transfer_id"])
         ses.send_mail(
             "Complaint approved!",
-            ["destination"],
+            ["kolesov0703@gmail.com"],
             "Congrats! Your claim is approved, check your bank account in 2 days for your refund"
         )
 
@@ -72,8 +75,11 @@ class ComplaintManager:
         await database.execute(
             complaints.update()
             .where(complaints.c.id == complaint_id)
-            .values(status=State.rejected)
+            .values(state=State.rejected)
         )
+        transaction_data = await database.fetch_one(transactions.select().where(transactions.c.complaint_id == complaint_id))
+        wise = WiseService()
+        wise.cancel_fund(transfer_id=transaction_data["transfer_id"])
 
     @staticmethod
     async def issue_transaction(amount, full_name, iban, complaint_id):
