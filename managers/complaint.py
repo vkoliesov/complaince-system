@@ -37,13 +37,15 @@ class ComplaintManager:
         decode_photo(path, encoded_photo)
         complaint_data["photo_url"] = s3.upload(path, name, extension)
         os.remove(path)
-        id_ = await database.execute(complaints.insert().values(**complaint_data))
-        await ComplaintManager.issue_transaction(
-            amount=complaint_data["amount"],
-            full_name=f"{user['first_name']} {user['last_name']}",
-            iban=user["iban"],
-            complaint_id=id_
-        )
+        async with database.transaction() as tconn:
+            id_ = await tconn._connection.execute(complaints.insert().values(**complaint_data))
+            await ComplaintManager.issue_transaction(
+                tconn=tconn,
+                amount=complaint_data["amount"],
+                full_name=f"{user['first_name']} {user['last_name']}",
+                iban=user["iban"],
+                complaint_id=id_
+            )
         return await database.fetch_one(
             complaints.select().where(complaints.c.id == id_)
         )
@@ -82,7 +84,7 @@ class ComplaintManager:
         wise.cancel_fund(transfer_id=transaction_data["transfer_id"])
 
     @staticmethod
-    async def issue_transaction(amount, full_name, iban, complaint_id):
+    async def issue_transaction(tconn, amount, full_name, iban, complaint_id):
         wise = WiseService()
         quote_id = wise.create_quote(amount=amount)
         recipeint_id = wise.create_recipient_account(
@@ -101,4 +103,4 @@ class ComplaintManager:
             "complaint_id": complaint_id
         }
 
-        await database.execute(transactions.insert().values(**data))
+        await tconn._connection.execute(transactions.insert().values(**data))
